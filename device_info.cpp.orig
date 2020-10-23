@@ -1,0 +1,80 @@
+#include "device_info.h"
+#include "sy_logger.h"
+#include <QtDebug>
+
+device_info::device_info(QObject *parent) : data_info(parent),
+    m_device_thread(nullptr)
+{
+
+}
+
+void device_info::start()
+{
+    if(m_device_thread != nullptr || m_acc_conf_info.isNull()){
+        return;
+    }
+    if(get_device_type() == 0){ //？？？？？  空调设置初始温度
+        set_ctrl_progress("20");
+    }
+    m_device_thread = new device_thread((data_info *)this, m_acc_conf_info);
+    connect(this, &device_info::device_ctrl_signal, m_device_thread, &device_thread::device_ctrl_signal);  //都是发送指令的信号
+    connect(this, &device_info::device_ctrl_param_1_signal, m_device_thread, &device_thread::device_ctrl_param_1_signal);
+    connect(this, &device_info::device_ctrl_param_2_signal, m_device_thread, &device_thread::device_ctrl_param_2_signal);
+    connect(this, &device_info::device_ctrl_param_3_signal, m_device_thread, &device_thread::device_ctrl_param_3_signal);
+
+    connect(m_device_thread, &device_thread::temperature_changed_signal, this, &device_info::temperature_changed_slot);
+    connect(m_device_thread, &device_thread::device_status_changed_signal, this, &device_info::device_status_changed_slot);
+    connect(m_device_thread, &device_thread::mute_status_changed_signal, this, &device_info::mute_status_changed_slot);
+    connect(m_device_thread, &device_thread::volume_value_signal, this, &device_info::volume_value_slot);
+
+    m_device_thread->start();
+}
+
+void device_info::stop()
+{
+    if(m_device_thread != nullptr){
+        m_device_thread->quit();
+        m_device_thread->wait();
+        delete m_device_thread;
+        m_device_thread = nullptr;
+    }
+    data_info::stop();
+}
+
+void device_info::set_acc_conf_info(QSharedPointer<acc_conf_info> val)
+{
+    m_acc_conf_info = val;
+}
+
+void device_info::temperature_changed_slot(int temperature)
+{
+    set_ctrl_progress(QString("%1").arg(temperature));  // 修改温度
+    emit temperature_changed_signal(get_id());    //传入uuid
+}
+
+void device_info::device_status_changed_slot(bool status)
+{
+    set_device_status(status);
+    emit device_status_changed_signal(get_id(), status);
+}
+
+void device_info::mute_status_changed_slot(int index, bool status)  //音频状态查询结果回调
+{
+    if(index <0  || index >= m_music_slides.count()){
+        return;
+    }
+//    qDebug()<<get_id();
+    emit mute_status_changed_signal(get_id(), index, status);
+}
+
+void device_info::volume_value_slot(int index, int value)  //音量查询结果回调
+{
+    if(index <0  || index >= m_music_slides.count()){
+        return;
+    }
+    QVariantMap map = m_music_slides.at(index).toMap();
+    int dbMin = map.value("dmMusicDbMin").toInt();
+    int dbMax = map.value("dmMusicDbMax").toInt();
+//    qDebug()<<value;
+    emit volume_value_signal(get_id(), index, value, value/(1.0 *(dbMax-dbMin)));
+}

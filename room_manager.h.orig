@@ -1,0 +1,259 @@
+#ifndef ROOM_MANAGER_H
+#define ROOM_MANAGER_H
+
+#include <QObject>
+#include <QTimer>
+#include <QHash>
+#include <QDir>
+#include <QSharedPointer>
+#include <QTranslator>
+#include <QGuiApplication>
+#include <QSettings>
+#include "data_model.h"
+#include "acc_conf_info.h"
+#include <QQmlApplicationEngine>
+#include "room_check.h"
+
+#include <QProcess>
+class room_manager : public QObject
+{
+    Q_OBJECT
+public:
+    explicit room_manager(data_model *room, data_model *signal_source,
+                          data_model *signal_mode, data_model *device,
+                          data_model *signal_source_display,
+                          data_model *signal_mode_image,
+                          data_model *device_ctrl,
+                          QGuiApplication &app,
+                          QQmlApplicationEngine &engine,
+                          QObject *parent = nullptr);
+    Q_PROPERTY(int current_index_room READ get_current_index_room WRITE set_current_index_room NOTIFY index_room_changed)
+    Q_PROPERTY(int logical_wall_row READ get_logical_wall_row WRITE set_logical_wall_row NOTIFY logical_wall_row_changed)
+    Q_PROPERTY(int logical_wall_column READ get_logical_wall_column WRITE set_logical_wall_column NOTIFY logical_wall_column_changed)
+    Q_PROPERTY(QString background_image READ get_backgroup_image NOTIFY backgroup_image_changed)
+
+
+    Q_INVOKABLE int get_current_index_room();
+    Q_INVOKABLE void set_current_index_room(int val);
+
+    Q_INVOKABLE QString get_backgroup_image();
+
+    int get_logical_wall_row();
+    void set_logical_wall_row(int val);
+
+    int get_logical_wall_column();
+    void set_logical_wall_column(int val);
+
+
+
+    void read_conf();
+    void read_msg_from_server(QString ip, QString port, QString username, QString password);
+    //二期新增，保存ip信息
+    void read_ip();
+
+    Q_INVOKABLE bool add_device_display(QString videoId, int width, int height);
+    Q_INVOKABLE bool add_device_display_new(QString videoId, int width, int height,QList<int> pos);  //二期新的吸附方法
+    Q_INVOKABLE void add_device_display(QString videoId, double width, double height, double x, double y, int wall_width, int wall_height);
+//    Q_INVOKABLE void add_device_display(QString videoId, double width, double height, double x, double y, int wall_width, int wall_height);
+    Q_INVOKABLE void update_device_position(int index, double width, double height, double x, double y, int wall_width, int wall_height);
+    Q_INVOKABLE void double_click_position(int index, double width, double height, double x, double y, int wall_width, int wall_height, int row, int row_num, int column, int column_num);
+    Q_INVOKABLE void update_device_position(int index, double x, double y, int wall_width, int wall_height);
+    Q_INVOKABLE void move_device_position(int index, double x, double y, int wall_width, int wall_height);
+    Q_INVOKABLE void remove_device_display(int index);
+    Q_INVOKABLE void update_device_position_to_wall(int index);
+    Q_INVOKABLE void read_mode_images();
+    Q_INVOKABLE void save_conf();
+    Q_INVOKABLE void add_mode(QString img, QString name);
+    Q_INVOKABLE void update_mode(int index);
+    Q_INVOKABLE void select_mode(int index, int wall_width, int wall_height);
+
+    Q_INVOKABLE void remove_mode(int index);
+    Q_INVOKABLE void remove_signal_source(int index);
+    Q_INVOKABLE void add_signal_source(int type, QString name, QString ip, QString channel);
+
+    Q_INVOKABLE void device_ctrl(int index, QString cmd);
+    Q_INVOKABLE void device_ctrl(int index, QString cmd, int channel);
+    Q_INVOKABLE void device_ctrl(int index, QString cmd, int channel, int param1);
+    Q_INVOKABLE void device_ctrl(int index, int operate ,int action,int multiple);
+
+    Q_INVOKABLE void device_ctrl_select(int index);
+    Q_INVOKABLE QVariantList get_group_childs();
+    Q_INVOKABLE void device_scale(double scale, int width, int height, int x, int y, int wall_width, int wall_height);
+    //二期新增
+    Q_INVOKABLE QString getIP();
+    Q_INVOKABLE void setIP(QString,QString,QString);
+
+    Q_INVOKABLE QVariantList get_group_polling();   //得到轮巡列表
+    Q_INVOKABLE void set_polling(int o_index,int s_index);
+    //二期新加
+    Q_INVOKABLE void delete_all_signal_in_mode(); //清空窗口
+    Q_INVOKABLE void fresh_all_signal_in_mode(); //刷新窗口
+    //二期新增
+    Q_INVOKABLE int get_num_of_device(int type);//获取场景中指定设备的数量
+    Q_INVOKABLE void control_all_screen_device(int hint);//总控区域控制所有的屏幕开关
+    Q_INVOKABLE void control_all_power_device(int hint);//总控区域控制所有的电源开关
+
+    //二期新增 设置和获取C区的宽和高
+     Q_INVOKABLE int manager_get_wall_width();//
+     Q_INVOKABLE void manager_set_wall_width(int hint);//
+     Q_INVOKABLE int manager_get_wall_height();//
+     Q_INVOKABLE void manager_set_wall_height(int hint);//
+    
+    //二期新增  从服务器获取场景等信息
+     Q_INVOKABLE void read_conf_from_server(QString,QString,QString,QString);//
+
+
+    //字幕和地图设置
+    Q_INVOKABLE void open_caption_setting();//
+    Q_INVOKABLE void open_basemap_setting();//
+    //标识轮巡的序号
+    Q_INVOKABLE int get_polling_num();
+    Q_INVOKABLE void set_polling_num(int hint);
+
+    //处理信号模式同步后的操作
+    Q_INVOKABLE void select_mode_by_sync(int index, int wall_width, int wall_height);
+
+    // IPC信号控制
+    Q_INVOKABLE void ptz_control(int operate ,int action);
+    //HDMI信号控制
+    Q_INVOKABLE void hdmi_control(int operate ,int action);
+//    Q_INVOKABLE void open_aduio();
+//    Q_INVOKABLE void close_aduio();
+//    Q_INVOKABLE void set_aduio_param();
+    //语言切换
+    Q_INVOKABLE void language_switch();
+
+    //设置音量
+    Q_INVOKABLE void set_signal_source_in_wall_volume(int index,int vol);
+    //音频操作  ture：打开 false：关闭
+    Q_INVOKABLE void set_audio_param(int index,bool hint);
+
+    //国际化相关
+
+    void change_language();  //切换语言并保存在config.ini中
+
+    Q_INVOKABLE void free_memory();//关闭软件时释放内存
+
+    Q_INVOKABLE QVariantList find_signal(QString str);//查找信号源
+
+    Q_INVOKABLE int which_os();//查找信号源_
+signals:
+    void index_room_changed();
+    void image_changed_signal(int index);
+    void onIncoming(int idx, QPixmap map);
+    void logical_wall_column_changed();
+    void logical_wall_row_changed();
+    void image_incoming_signal(QString id, QImage img);
+    void backgroup_image_changed();
+    void mute_status_changed_signal(QString id, int index, bool status);
+    void volume_value_signal(QString id, int index, int value, double y);
+    void sence_changed();
+
+    //二期新增
+    void rellay_get_device_display();
+    void scene_type(int type); //场景信号 是单场景还是多场景  1是单 大于1是多场景
+    void polling_status_signal(int index);
+
+    //信号来源和轮巡的信号,防止界面刷新延迟
+    void sence_changed_from_siganl_source();
+    void sence_changed_from_polling();
+    //同步信号模式，改变当前D区中 信号模式的索引
+    void index_mode_changed(int index);
+
+    //音频同步操作信号  打开音频和关闭音频
+    void display_audio_msg(bool hint,QString name);
+
+    void fix_comboBox_signal();//修复下拉框国际化时的延迟问题
+
+    void test_signal22(double x,double y,double width,double height,int win_id);
+public slots:
+    void index_changed_room_slot();
+    void image_changed_time_out_slot();
+    void signal_source_changed_slot(int index);
+    void signal_source_in_wall_changed_slot(int index);
+    void data_changed_by_device_slot(QString id);
+    void device_status_changed_slot(QString id, bool status);
+    void win_changed_slot();
+    void id_changed_slot(QString val);
+    void room_check_msg_slot(int hint,QString msg);
+
+    //二期新增  接受要同步的操作的槽
+    void sync_win_open_signal_slot(QSharedPointer<data_info> val);
+    void sync_win_close_signal_slot(int win_id);
+    void sync_win_close_all_signal_slot();
+    void sync_win_move_signal_slot(QSharedPointer<data_info> val);
+    void sync_win_level_signal_slot(int win_id,int hint);
+    void sync_win_change_signal_slot(QSharedPointer<data_info> val);
+
+    void sync_mode_change_signal_slot(QString id);  //
+    void sync_mode_remove_signal_slot(QString id);
+    void sync_mode_add_signal_slot(QSharedPointer<data_info> val);
+    void sync_mode_edit_signal_slot(QSharedPointer<data_info> val);
+
+    void sync_audio_open_signal_slot(QString sig_id,int channel,int vol,int au_id);
+    void sync_audio_close_signal_slot(int au_id);
+    void sync_audio_set_signal_slot(int au_id,int vol);
+    //处理单场景模式
+    void headler_signal_scene_slot(bool hint,QString ip, QString port, QString username, QString password);
+
+    void mode_changed_slot();
+private:
+    data_model *m_model_room;
+    data_model *m_model_signal_source;
+    data_model *m_model_signal_mode;
+    data_model *m_model_device;
+    data_model *m_model_signal_source_display;
+    data_model *m_model_signal_mode_image;
+    data_model *m_model_device_ctrl;
+//    QQmlApplicationEngine *m_engine;
+    int m_current_index_room;
+    int m_logical_wall_row;
+    int m_logical_wall_column;
+    QString m_root_path;
+
+    QHash<int, QSharedPointer<acc_conf_info>> m_hash_acc_conf;
+
+
+    QTimer m_timer;
+
+    QString get_content_from_file(QString fileName);
+    QString get_ico_path(const QString &path);
+    void create_connect_for_image(QList<QSharedPointer<data_info> > list);
+    void discreate_connect_for_image(QList<QSharedPointer<data_info> > list);
+    void stop_by_switch(QList<QSharedPointer<data_info> > list);
+    void start_by_switch(QList<QSharedPointer<data_info> > list);
+    void read_music_in_out(QJsonObject &jo_dev, QVariantList &list, const QString &io_type, const QString &io_name, const int dev_type = 6);
+    bool is_using_in_c(double width, double height, double x, double y, int wall_width, int wall_height);
+    void read_mode_images(QDir &appdir, bool source_file = false);
+
+    //二期新增判断信号在哪个小屏，返回小屏左上角坐标
+    QList<int>  where_in_c(double width, double height, double x, double y, int wall_width, int wall_height);
+    QString strIP=nullptr;
+    //判断新信号的重心是否在覆盖的信号范围中
+    bool is_in_gravity(double width, double height, double x, double y, int wall_width, int wall_height,QSharedPointer<data_info> val);
+    int m_wall_width;
+    int m_wall_height;
+    room_check *checkroom;
+
+    //字幕和底图标记
+    bool caption_hint;
+    bool basemap_hint;
+    QProcess caption_pro;
+    QProcess basemap_pro;
+
+    //轮巡标识  为-1时才可以关闭信号源窗口，避免出现问题
+    int polling_num;
+    //给没有audio_id的窗口信号添加id和
+    void find_audio_param_from_current_room(QSharedPointer<data_info> val);
+
+
+    QTranslator*  m_translator;
+    QGuiApplication *m_app;
+    QQmlApplicationEngine *m_engine;
+    bool isZH;
+
+
+
+};
+
+#endif // ROOM_MANAGER_H

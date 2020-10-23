@@ -1,0 +1,358 @@
+#include "room_check.h"
+#include "sy_logger.h"
+#include "sy_utils.h"
+#include <QHostAddress>
+#include <QTcpSocket>
+#include <QtDebug>
+#include "signal_resource_info.h"
+#include "room_info.h"
+#pragma pack(push, 1)
+typedef struct {
+    int len;
+    int id;
+    int cmd;
+} CMD_HEADER;
+
+typedef struct {
+    int id;
+    int status;
+    int connect_id;
+} LOGIN_RESPONSE, *PLOGIN_RESPONSE;
+
+typedef struct {  //二期新增获取场景
+    char groud_id[16];
+    int len;
+
+} TEST_RESPONSE, *PTEST_RESPONSE;
+
+typedef struct {
+    int id;
+    int status;
+    int count;
+} SCENE_HEADER, *PSCENE_HEADER;
+
+typedef struct {
+    int cdSize; //整个结构体的大小
+    char id[16]; //guid
+    int len;  //单个场景名称的长度
+} SCENE_RESOURCE_FIRST, *PSCENE_RESOURCE_FIRST;
+
+typedef struct
+{
+    char signal_id[16];
+    //WINPOSITION
+    int left;
+    int top;
+    unsigned int width;
+    unsigned int height;
+    int style;
+    unsigned int win_id;
+    int signal_type;
+} WIN, *PWIN;
+typedef struct
+{
+    char signal_id[16];
+    int channel;
+    int opt;//volume;
+    unsigned int play_id;
+} AUDIO, *PAUDIO;
+
+typedef struct
+{
+    int num;
+} NUM, *PNUM;
+
+#pragma pack(pop)
+room_check::room_check(QObject *parent) : QObject(parent),
+    m_packet_id(1),m_tcp_socket(nullptr),m_timer(nullptr),tiemr(nullptr)
+{
+    m_tcp_socket = new QTcpSocket(this);
+    connect(m_tcp_socket, &QTcpSocket::readyRead, this, &room_check::recv_data);
+    connect(m_tcp_socket, &QTcpSocket::connected, this, &room_check::connected);
+    connect(m_tcp_socket,&QTcpSocket::stateChanged,this,&room_check::onSocketStateChange);
+
+    tiemr=new QTimer();
+    connect(tiemr,&QTimer::timeout,this,&room_check::time_out);
+}
+room_check::~room_check()
+{
+    stop();
+}
+void room_check::start(QString ip, QString port, QString username, QString password)
+{
+
+//    if(m_tcp_socket != nullptr){
+
+//        qDebug()<<"ip22:"<<ip<<":"<<port.toInt();
+//        return;
+
+//    }
+//    qDebug()<<"begain room_check";
+
+    usr=username;
+    pwd=password;
+    IP=ip;
+    PORT=port;
+//    qDebug()<<"ip:"<<ip<<":"<<port.toInt();
+    qDebugxxxx(qtr("检查该单场景是否可用"), "samp", ip, port);
+
+    m_tcp_socket->connectToHost(ip, (quint16)port.toInt());
+
+//    if(m_timer == nullptr){
+//        m_timer = new QTimer();
+//        connect(m_timer, &QTimer::timeout, this, &room_check::time_reconnect);
+//    }
+//    else{
+//        m_timer->stop();
+//    }
+    tiemr->start(4000);
+
+    m_packet_id = 1;
+}
+
+void room_check::stop()
+{
+    if(m_tcp_socket != nullptr) {
+        m_tcp_socket->close();
+        delete m_tcp_socket;
+        m_tcp_socket = nullptr;
+    }
+    if(tiemr != nullptr) {
+        delete  tiemr;
+    }
+
+
+    if(m_timer != nullptr) {
+        delete m_timer;
+
+    }
+
+}
+
+void room_check::connected()
+{
+    qDebug()<<"tcp success";
+    tiemr->stop();
+    login();
+    QByteArray res = get_response();
+    if(res.count() <= 0) {
+        qWarnx(qtr("获取场景登录失败，重新登录"));
+//        reconnected();
+        emit login_status(false,IP, PORT, usr, pwd);
+        return;
+    }
+//    qDebug()<<sizeof (PLOGIN_RESPONSE);
+    PLOGIN_RESPONSE rv = (PLOGIN_RESPONSE)res.constData();
+    if(rv->status != 0) {
+        qWarnxx(qtr("登录失败"), rv->status);
+        emit login_status(false,IP, PORT, usr, pwd);
+        return;
+    }
+    m_tcp_socket->readAll();
+    emit login_status(true,IP, PORT, usr, pwd);
+    stop();
+
+//    get_scene(); //获取场景
+}
+
+void room_check::recv_data()
+{
+//    qDebugx(qtr("连接tcp成功后接受返回的数据"));
+//    if(m_tcp_socket == nullptr){
+//        return;
+//    }
+
+}
+
+void room_check::time_reconnect()
+{
+    start(IP,PORT,usr,pwd);
+}
+
+void room_check::onSocketStateChange(QAbstractSocket::SocketState socketState)
+{
+    switch(socketState)
+    {
+    case QAbstractSocket::UnconnectedState:
+    {
+        qDebug()<<(QStringLiteral("scoket状态：UnconnectedState"));
+//           emit login_status(false,IP, PORT, usr, pwd);
+//           stop();
+    }
+    break;
+    case QAbstractSocket::HostLookupState:
+        qDebug()<<(QStringLiteral("scoket状态：HostLookupState"));
+        break;
+    case QAbstractSocket::ConnectingState:
+        qDebug()<<(QStringLiteral("scoket状态：ConnectingState"));
+        break;
+
+    case QAbstractSocket::ConnectedState:
+        qDebug()<<(QStringLiteral("scoket状态：ConnectedState"));
+        break;
+
+    case QAbstractSocket::BoundState:
+        qDebug()<<(QStringLiteral("scoket状态：BoundState"));
+        break;
+
+    case QAbstractSocket::ClosingState:
+        qDebug()<<(QStringLiteral("scoket状态：ClosingState"));
+        break;
+
+    case QAbstractSocket::ListeningState:
+        qDebug()<<(QStringLiteral("scoket状态：ListeningState"));
+    }
+}
+
+void room_check::time_out()
+{
+    emit login_status(false,IP, PORT, usr, pwd);
+    stop();
+
+}
+
+QByteArray room_check::get_response()
+{
+    if(!m_tcp_socket->waitForReadyRead()) {
+        qWarnx(qtr("未接收到响应"));
+        return QByteArray();
+    }
+    int len = 0;
+    if(m_tcp_socket->read((char *)&len, sizeof(int)) != sizeof(int)) {
+        qWarnx(qtr("未能收取有效的响应长度"));
+        m_tcp_socket->readAll();
+        return QByteArray();
+    }
+//    qDebugxx(qtr("接收响应数据的长度"), len);
+    if(len <= 0) {
+        return QByteArray();
+    }
+    if(len > 2 * 1024 * 1024) {
+        qWarnx(qtr("收到的数据长度过长"));
+        m_tcp_socket->readAll();
+        return QByteArray();
+    }
+    return safeRecvbyTcp(m_tcp_socket, len);
+}
+
+void room_check::login()
+{
+    if(m_tcp_socket == nullptr) {
+        return;
+    }
+    QByteArray data;
+    add_cmd_header(data, 0x00, 4 + 4 + 4 + usr.length()+ 4 + pwd.length());
+    int len = usr.length();
+    add_data_to_byte_array(data, (char *)&len, sizeof(int));
+    data.append(usr.toLocal8Bit().constData());
+    len = pwd.length();
+    add_data_to_byte_array(data, (char *)&len, sizeof(int));
+    data.append(pwd.toLocal8Bit().constData());
+
+    qDebugxx(qtr("登录指令"), QString(data.toHex()));
+    m_tcp_socket->write(data);
+}
+void room_check::add_cmd_header(QByteArray &data, int cmd, int len)
+{
+    CMD_HEADER cmd_header;
+    cmd_header.len = len;
+    cmd_header.id = m_packet_id ++;
+    cmd_header.cmd = cmd;
+    add_data_to_byte_array(data, (char *)&cmd_header, sizeof(CMD_HEADER));
+}
+void room_check::get_scene()
+{
+    if(m_tcp_socket == nullptr) {
+        return;
+    }
+
+    QByteArray data;
+    int a=3;
+    add_cmd_header(data, 0x10, 4 + 4 + 4);
+    add_data_to_byte_array(data, (char *)&a, sizeof ( int));
+//    qDebug()<<data.toHex();
+    m_tcp_socket->write(data);
+    QByteArray res = get_response();
+
+    if(res.count() <= 0) {
+        qWarnx(qtr("查询场景失败，重新登录"));
+        emit return_scene(m_list_scene);
+//        reconnected();
+        return;
+    }
+    PSCENE_HEADER scene = (PSCENE_HEADER)res.constData();
+    if(scene->count <= 0) {
+        qWarnx(qtr("未配置场景源"));
+        emit return_scene(m_list_scene);
+        return;
+    }
+
+    qDebugxx(qtr("获取到场景源"), scene->count);
+    int pos = sizeof (SCENE_HEADER);
+    int index = 0;
+    for (int i=0; i<scene->count; i++) {
+        QSharedPointer<data_info> info(new room_info());
+
+        PSCENE_RESOURCE_FIRST first = (PSCENE_RESOURCE_FIRST)(res.constData() + pos);
+        QByteArray  scene_byte=res.mid(pos, first->cdSize);
+        QString id = QString(QByteArray(first->id, sizeof(first->id)).toHex());
+        QString scene_name=QString(res.mid(pos+sizeof (SCENE_RESOURCE_FIRST), first->len));
+
+        info->set_name(scene_name);
+        info->set_ip_address(IP);
+        info->set_user_name(usr);
+        info->set_user_pwd(pwd);
+        info->set_port((quint16)PORT.toInt());
+        info->set_logical_wall_row(2);
+        info->set_logical_wall_column(2);
+        info->set_index(index++);
+
+        m_list_scene.append(info);
+
+        //获取窗口
+        PNUM num_st = (PNUM)(scene_byte.constData() + sizeof (SCENE_RESOURCE_FIRST)+first->len);
+        int win_pos=sizeof (SCENE_RESOURCE_FIRST)+first->len+4;
+        for (int j=0; j<num_st->num; j++) {
+            PWIN win_st = (PWIN)(scene_byte.constData() + win_pos);
+            QSharedPointer<data_info> sig(new signal_resource_info());
+            QString id = QString(QByteArray(win_st->signal_id, sizeof(win_st->signal_id)).toHex());
+
+            sig->set_display_x(win_st->left);
+            sig->set_display_y(win_st->top);
+            sig->set_display_width(win_st->width);
+            sig->set_display_height(win_st->height);
+            sig->set_id(id);
+            sig->set_win_id(win_st->win_id);
+            info->add_signal_source_in_tv_wall(sig);
+            win_pos=win_pos+sizeof (WIN);}
+        //获取音频
+        PNUM num_st2=(PNUM)(scene_byte.constData() + win_pos);
+        int audio_pos=win_pos+4;
+        for (int j=0; j<num_st2->num; j++) {
+            PAUDIO audio_st = (PAUDIO)(scene_byte.constData() + audio_pos);
+
+            audio_pos=audio_pos+sizeof (AUDIO);
+        }
+        pos=pos+first->cdSize;
+    }
+
+    QString strs="dd";
+//    emit room_check_msg(1 ,strs);
+    emit return_scene(m_list_scene);
+    m_tcp_socket->readAll();
+
+
+}
+
+void room_check::reconnected()
+{
+    if(m_tcp_socket != nullptr) {
+        m_tcp_socket->close();
+
+        delete m_tcp_socket;
+        m_tcp_socket = nullptr;
+    }
+    if(m_timer != nullptr) {
+        m_timer->start(3000);
+    }
+}

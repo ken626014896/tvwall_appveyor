@@ -1,0 +1,390 @@
+
+{
+    "aConfig": [
+        {
+            "cmdType": "hex",
+            "cmds": [
+                {
+                    "cmd": "btnLeft",
+                    "err": "",
+                    "send": "",
+                    "suc": ""
+                },
+                {
+                    "cmd": "btnCenterIdle",
+                    "err": "",
+                    "send": "",
+                    "suc": ""
+                },
+                {
+                    "cmd": "btnRight",
+                    "err": "",
+                    "send": "",
+                    "suc": ""
+                },
+                {
+                    "cmd": "btnCenterActive",
+                    "err": "",
+                    "send": "",
+                    "suc": ""
+                }
+            ],
+            "model": "init",
+            "modelName": "默认配置",
+            "name": "窗帘",
+            "netType": 0,
+            "sort": 2,
+            "type": 2
+        },
+        {
+            "cmdType": "hex",
+            "cmds": [
+                {
+                    "cmd": "btnLeft",
+                    "err": "",
+                    "send": "",
+                    "suc": ""
+                },
+                {
+                    "cmd": "btnCenterIdle",
+                    "err": "",
+                    "send": "",
+                    "suc": ""
+                },
+                {
+                    "cmd": "btnRight",
+                    "err": "",
+                    "send": "",
+                    "suc": ""
+                },
+                {
+                    "cmd": "btnCenterActive",
+                    "err": "",
+                    "send": "",
+                    "suc": ""
+                }
+            ],
+            "model": "init",
+            "modelName": "默认配置",
+            "name": "无纸化终端",
+            "netType": 0,
+            "sort": 3,
+            "type": 3
+        },
+        {
+            "cmdType": "hex",
+            "cmds": [
+                {
+                    "cmd": "setEffect",
+                    "err": "",
+                    "send": "A5C33C5AFF360201xxEE",
+                    "suc": ""
+                },
+                {
+                    "cmd": "getVol",
+                    "err": "",
+                    "send": "A5C33C5AFF630402xxyyEE",
+                    "suc": ""
+                },
+                {
+                    "cmd": "mute",
+                    "err": "",
+                    "send": "A5C33C5AFF360303xxyyzzEE",
+                    "suc": ""
+                },
+                {
+                    "cmd": "getMute",
+                    "err": "",
+                    "send": "A5C33C5AFF630302xxyyEE",
+                    "suc": ""
+                },
+                {
+                    "cmd": "turnVol",
+                    "err": "",
+                    "send": "A5C33C5AFF360504xxyyzz0AEE",
+                    "suc": ""
+                },
+                {
+                    "cmd": "setVol",
+                    "err": "",
+                    "send": "A5C33C5AFF360404xxyyllhhEE",
+                    "suc": ""
+                }
+            ],
+            "model": "init",
+            "modelName": "默认配置",
+            "name": "音响",
+            "netType": 0,
+            "sort": 6,
+            "type": 6
+        },
+        {
+            "cmdType": "ascii",
+            "cmds": [
+                {
+                    "cmd": "btnCenterIdle",
+                    "err": "",
+                    "send": "off*",
+                    "suc": ""
+                },
+                {
+                    "cmd": "getStatus",
+                    "err": "",
+                    "send": "read",
+                    "suc": ""
+                },
+                {
+                    "cmd": "btnCenterActive",
+                    "err": "",
+                    "send": "on*",
+                    "suc": ""
+                }
+            ],
+            "model": "init",
+            "modelName": "默认配置",
+            "name": "屏幕",
+            "netType": 0,
+            "sort": 4,
+            "type": 4
+        },
+        {
+            "cmdType": "ascii",
+            "cmds": [
+                {
+                    "cmd": "getCurrent",
+                    "err": "",
+                    "send": "",
+                    "suc": ""
+                },
+                {
+                    "cmd": "btnLeft",
+                    "err": "",
+                    "send": "",
+                    "suc": ""
+                },
+                {
+                    "cmd": "btnRight",
+                    "err": "",
+                    "send": "",
+                    "suc": ""
+                },
+                {
+                    "cmd": "btnBottomCenterIdle",
+                    "err": "",
+                    "send": "off*",
+                    "suc": ""
+                },
+                {
+                    "cmd": "btnBottomCenterActive",
+                    "err": "",
+                    "send": "on*",
+                    "suc": ""
+                }
+            ],
+            "model": "init",
+            "modelName": "默认配置",
+            "name": "灯光",
+            "netType": 0,
+            "sort": 1,
+            "type": 1
+        },
+        {
+            "cmdType": "hex",
+            "cmds": [
+                {
+                    "cmd": "getCurrent",
+                    "err": "",
+                    "send": "",
+                    "suc": ""
+                },
+                {
+                    "cmd": "btn17",
+                    "err": "",
+                    "send": "22010220020018D203",
+                    "suc": ""
+                },
+                {
+                    "cmd": "btnBottomLeft",
+                    "err": "",
+                    "send": "",
+                    "suc": ""
+                },
+                {
+                    "cmd": "btnBottomRight",
+                    "err": "",
+                    "send": "",
+                    "suc": ""
+                },
+                {
+                    "cmd": "btnBottomCenterIdle",
+                    "err": "",
+                    "send": "220102200201d91203",
+                    "suc": ""
+                },
+                {
+                    "cmd": "btn16",
+                    "err": "",
+                    "send": "22010220020018D203",
+                    "suc": ""
+                },
+                {
+                    "cmd": "btnBottomCenterActive",
+                    "err": "",
+                    "send": "22010220020018D203",
+                    "suc": ""
+                }
+            ],
+            "model": "init",
+            "modelName": "默认配置",
+            "name": "空调",
+            "netType": 0,
+            "sort": 0,
+            "type": 0
+        },
+        {
+            "cmdType": "hex",
+            "cmds": [
+                {
+                    "cmd": "btnCenterIdle",
+                    "err": "",
+                    "send": "off*",
+                    "suc": ""
+                },
+                {
+                    "cmd": "getStatus",
+                    "err": "",
+                    "send": "read",
+                    "suc": ""
+                },
+                {
+                    "cmd": "btnCenterActive",
+                    "err": "",
+                    "send": "on*",
+                    "suc": ""
+                }
+            ],
+            "model": "init",
+            "modelName": "默认配置",
+            "name": "电源",
+            "netType": 0,
+            "sort": 5,
+            "type": 5
+        }
+    ],
+    "aScene": [
+        {
+            "aDevice": [
+                {
+                    "bit": 1,
+                    "ip": "192.168.0.105",
+                    "model": "init",
+                    "name": "a",
+                    "port": 5000,
+                    "type": 1
+                },
+                {
+                    "bit": 2,
+                    "ip": "192.168.0.105",
+                    "model": "init",
+                    "name": "b",
+                    "port": 5000,
+                    "type": 1
+                },
+                {
+                    "bit": 3,
+                    "ip": "192.168.0.105",
+                    "model": "init",
+                    "name": "c",
+                    "port": 5000,
+                    "type": 1
+                },
+                {
+                    "ip": "192.168.0.105",
+                    "model": "init",
+                    "name": "空调",
+                    "port": 5000,
+                    "type": 0
+                },
+                {
+                    "ip": "192.168.0.105",
+                    "model": "init",
+                    "name": "窗帘",
+                    "port": 5000,
+                    "type": 2
+                },
+                {
+                    "ip": "192.168.0.105",
+                    "model": "init",
+                    "name": "aaa",
+                    "port": 5000,
+                    "type": 3
+                },
+                {
+                    "bit": 1,
+                    "ip": "192.168.0.1044",
+                    "model": "init",
+                    "name": "撒大苏打",
+                    "port": 5000,
+                    "type": 4
+                },
+                {
+                    "bit": 1,
+                    "ip": "192.168.0.1055",
+                    "model": "init",
+                    "name": "电源22",
+                    "port": 5000,
+                    "type": 5
+                },
+                {
+                    "aEffect": [
+                        "现场",
+                        "摇滚",
+                        "声乐",
+                        "爵士",
+                        "轻柔",
+                        "聚会",
+                        "古典",
+                        "酒吧"
+                    ],
+                    "aIn": [
+                        "A",
+                        "B",
+                        "C",
+                        "D",
+                        "E",
+                        "F",
+                        "G",
+                        "H"
+                    ],
+                    "aOut": [
+                        "A",
+                        "B",
+                        "C",
+                        "D",
+                        "E",
+                        "F",
+                        "G",
+                        "H"
+                    ],
+                    "dbMax": 50,
+                    "dbMin": -50,
+                    "dbStep": 1,
+                    "ip": "192.168.0.105",
+                    "model": "init",
+                    "name": "音响 ",
+                    "port": 5000,
+                    "type": 6
+                }
+            ],
+            "ip": "192.168.10.90",
+            "models": [
+            ],
+            "name": "主控1",
+            "numGridCol": 1,
+            "numGridRow": 1,
+            "password": "",
+            "port": 6801,
+            "user": "admin"
+        }
+    ]
+}
